@@ -127,6 +127,45 @@ chore: 构建/工具链
 - `fix: 聊天窗口最小尺寸限制失效`
 - `refactor: 提取公共的消息格式化函数`
 
+## 用 Claude Code 提交贡献
+
+如果你也在用 Claude Code，可以直接让它帮你完成从改代码到提 PR 的全流程。
+
+### 准备工作
+
+首先把 Claude Code 的授权和能力告诉它：
+
+```
+你现在在帮我优化一个开源桌宠项目 desktop-pet-wechat，
+仓库在 https://github.com/yangr8640-eng/desktop-pet-wechat，
+我先 Fork 并 Clone 到了本地。
+
+请先阅读 CONTRIBUTING.md 了解项目规范和代码风格。
+```
+
+### 日常贡献的话术
+
+直接把需求描述清楚就行，跟聊天一样：
+
+```
+帮我给桌宠的微信桥接加一个功能：当微信用户发图片时，
+自动 OCR 识别文字内容，然后交给 AI 处理。
+
+改动完成后跑 npm test 确保不破坏现有功能，
+然后用 Conventional Commits 格式提交，
+最后帮我提 PR 到 yangr8640-eng/desktop-pet-wechat 的 windows 分支。
+```
+
+### PR 话术
+
+```
+把当前分支的改动推到我 Fork 的仓库，
+然后用 gh 命令给 yangr8640-eng/desktop-pet-wechat 的 windows 分支提一个 PR，
+标题写 "feat: xxx"，描述写清楚改了什么。
+```
+
+Claude Code 会自动完成：读代码 → 改文件 → 跑测试 → commit → push → `gh pr create`。
+
 ## 常见贡献方向
 
 - 🎨 **新桌宠形象** — 在 `pet/themes/` 下新建设计目录 + `themes.js` 注册
