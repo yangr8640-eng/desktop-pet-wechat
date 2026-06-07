@@ -24,6 +24,7 @@ An AI desktop pet for Windows, supporting DeepSeek, OpenAI (ChatGPT), and custom
 - 🪟 **深色半透明主题** — CSS backdrop-filter模拟层次感，可拖拽调整窗口尺寸
 - 🔑 **启动时API Key验证** — 自动检测当前模型Key有效性，失效/未设置时弹出提醒
 - ➕ **自定义模型** — 支持添加任意OpenAI兼容API（如代理、第三方服务），自定义名称/端点/模型标识
+- 🤖 **微信远程控制** — 扫码绑定微信 Clawbot，通过微信发消息让桌宠执行任务（文件操作/命令执行/AI分析），结果返回微信
 - 🗣️ **主题对话气泡** — 每个形象有专属的悬停打招呼、闲置话语、投喂文案；Claude主题使用cyber代码风格气泡
 - 📋 **消息复制** — 用户和AI消息均可一键复制
 - 💾 **本地存储** — API Key和聊天记录完全本地化（electron-store），不上传任何第三方
@@ -123,6 +124,10 @@ desktop-pet/
 │   ├── search.js        # 搜索 — Bing搜索、天气查询
 │   ├── file-reader.js   # 文件读取 — TXT/PDF/DOCX/MD解析
 │   ├── windows.js       # 窗口管理 — 桌宠/聊天窗口创建与显隐
+│   ├── wechat-bridge.js  # 微信桥接 — ilink API扫码登录+长轮询消息
+│   ├── task-processor.js # 任务处理 — AI Agent循环+工具调用
+│   ├── task-queue.js     # 任务队列 — 状态管理+并发控制
+│   ├── system-tools.js   # 系统工具 — 文件操作+命令执行
 │   ├── ipc-handlers.js  # IPC处理 — 所有主进程事件处理
 │   └── updater.js       # 自动更新 — GitHub Releases检测与下载
 ├── scripts/
@@ -144,6 +149,7 @@ desktop-pet/
 │   ├── chat-conversations.js # 对话下拉菜单 + 搜索过滤
 │   ├── chat-stream.js   # 流式收发 + 重新生成 + 编辑 + 重试
 │   ├── chat-settings.js # 设置面板（模型/主题/个性/导出）
+│   ├── chat-wechat-settings.js # 微信扫码登录设置面板
 │   └── chat-updater.js  # 自动更新 banner + 搜索开关
 ├── test/
 │   ├── store.test.js    # 数据层单元测试
@@ -186,6 +192,12 @@ A: 打开聊天侧边栏，点击右上角🌐按钮切换。搜索通过抓取B
 **Q: 怎么切换桌宠形象？**  
 A: 打开聊天侧边栏 → 点击⚙️设置 → "宠物外观"下拉菜单切换。切换后桌宠形象、名称、性格语气、UI配色全部即时变化，重启保持。
 
+**Q: 怎么用微信控制桌宠？**  
+A: 打开聊天侧边栏 → ⚙️设置 → "🤖 微信连接" → 点击「📱 扫码登录」→ 用微信扫描二维码 → 在手机上确认登录。连接成功后，在微信上给 bot 发消息，桌宠会自动处理并回复。
+
+**Q: 微信 bot 能做什么？**  
+A: 跟聊天窗口一样，可以执行文件操作（列出/读取/创建文件）、运行命令、AI 对话、联网搜索。文件操作限制在 `~/` 目录下。
+
 **Q: 如何更新到最新版本？**  
 A: 启动应用后会自动检查更新。发现新版本时，聊天窗口顶部会出现更新横幅，点击「下载更新」→「立即重启」即可完成更新。也可以从 [Releases](https://github.com/yangr8640-eng/desktop-pet/releases) 下载最新 zip 包覆盖安装目录，数据不会丢失。
 
@@ -197,6 +209,10 @@ A: 启动应用后会自动检查更新。发现新版本时，聊天窗口顶�
 - [electron-updater](https://github.com/electron-userland/electron-builder/tree/master/packages/electron-updater) — 自动更新
 - [mammoth](https://github.com/mwilliamson/mammoth.js) — DOCX解析
 - [pdf-parse](https://github.com/nisaacson/pdf-parse) — PDF解析
+
+## 参与贡献 / Contributing
+
+欢迎提交 Pull Request！详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## License
 
