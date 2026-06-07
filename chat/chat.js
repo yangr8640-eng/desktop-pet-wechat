@@ -145,6 +145,7 @@ window.Chat = window.Chat || {};
   C.initInputHandlers();
   C.initSettingsHandlers();
   C.initGlobalSearch();
+  C.initWechatSettings();
   initResizeHandlers();
 
   // Bootstrap

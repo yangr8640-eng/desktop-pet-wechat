@@ -87,6 +87,26 @@
           </div>
         </div>
         <div class="settings-divider"></div>
+        <div class="settings-section" id="wechatSection">
+          <label class="settings-label">🤖 微信连接</label>
+          <div class="wechat-status-row">
+            <span class="wechat-status-dot" id="wechatStatusDot"></span>
+            <span class="wechat-status-text" id="wechatStatusText">未连接</span>
+            <span class="wechat-user-id" id="wechatUserId"></span>
+          </div>
+          <div class="wechat-qr-container" id="wechatQRContainer" style="display:none;">
+            <img class="wechat-qr-image" id="wechatQRImage" src="" alt="微信扫码登录二维码">
+            <p class="wechat-qr-hint" id="wechatQRHint">请使用微信扫描二维码</p>
+          </div>
+          <div class="wechat-actions">
+            <button class="wechat-btn wechat-btn-connect" id="wechatLoginBtn">📱 扫码登录</button>
+            <button class="wechat-btn wechat-btn-disconnect" id="wechatDisconnectBtn" style="display:none;">断开连接</button>
+          </div>
+          <p class="settings-hint" style="margin-top:6px;">
+            使用微信 ClawBot 远程控制桌宠执行任务
+          </p>
+        </div>
+        <div class="settings-divider"></div>
         <div class="settings-section">
           <label class="settings-label">宠物外观</label>
           <select class="settings-input" id="themeSelect">
@@ -158,6 +178,7 @@
   <script src="chat-search.js"></script>
   <script src="chat-stream.js"></script>
   <script src="chat-settings.js"></script>
+  <script src="chat-wechat-settings.js"></script>
   <script src="chat-updater.js"></script>
   <script src="chat.js"></script>
 </body>

@@ -7,6 +7,9 @@ const { readFileContent } = require('./file-reader');
 const { getPetWindow, getChatWindow, getChatVisible, showChatWindow, hideChatWindow } = require('./windows');
 const { getTheme } = require('../themes');
 const { destroyTray } = require('./tray');
+const { startLogin, disconnect, autoReconnect, getStatus: getBridgeStatus, getQRCode } = require('./wechat-bridge');
+const { getQueue, getTaskStatus } = require('./task-queue');
+const { getAgentLog } = require('./system-tools');
 
 function registerIpcHandlers() {
 
@@ -581,6 +584,47 @@ function registerIpcHandlers() {
 
     return results;
   });
+
+  /* ─── WeChat Bridge ─── */
+
+  ipcMain.handle('wechat-login', async () => {
+    return await startLogin();
+  });
+
+  ipcMain.handle('wechat-disconnect', async () => {
+    disconnect({ notify: true, reason: '用户主动断开' });
+    return { success: true };
+  });
+
+  ipcMain.handle('wechat-status', () => {
+    return getBridgeStatus();
+  });
+
+  ipcMain.handle('wechat-qrcode', () => {
+    return getQRCode();
+  });
+
+  ipcMain.handle('wechat-auto-reconnect', async () => {
+    return await autoReconnect();
+  });
+
+  /* ─── Task Queue ─── */
+
+  ipcMain.handle('task-list', () => {
+    return getQueue();
+  });
+
+  ipcMain.handle('task-status', (_event, taskId) => {
+    return getTaskStatus(taskId);
+  });
+
+  /* ─── Agent Log ─── */
+
+  ipcMain.handle('agent-log', (_event, limit) => {
+    return getAgentLog(limit || 50);
+  });
+
+  /* ─── Quit ─── */
 
   ipcMain.on('quit-app', () => {
     const petWindow = getPetWindow();

@@ -981,3 +981,110 @@ body.win32 .global-search-input {
 body.win32 .global-search-result:hover {
   background: rgba(255,255,255,0.08);
 }
+
+/* ─── WeChat Connection Settings ─── */
+
+.wechat-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.wechat-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #888;
+  transition: background 0.3s;
+}
+
+.wechat-status-dot.connected {
+  background: #4caf50;
+  box-shadow: 0 0 6px rgba(76, 175, 80, 0.5);
+}
+
+.wechat-status-dot.connecting {
+  background: #ff9800;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.wechat-status-dot.disconnected {
+  background: #888;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.wechat-status-text {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.wechat-user-id {
+  font-size: 11px;
+  color: var(--text2);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.wechat-qr-container {
+  text-align: center;
+  padding: 12px 0;
+  margin: 8px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.wechat-qr-image {
+  width: 200px;
+  height: 200px;
+  display: block;
+  margin: 0 auto;
+  border-radius: 4px;
+}
+
+.wechat-qr-hint {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text2);
+}
+
+.wechat-qr-hint a {
+  color: var(--accent);
+  word-break: break-all;
+}
+
+.wechat-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.wechat-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.wechat-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.wechat-btn-connect {
+  background: var(--accent);
+  color: #fff;
+}
+
+.wechat-btn-disconnect {
+  background: #e53935;
+  color: #fff;
+}

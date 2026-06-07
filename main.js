@@ -5,6 +5,7 @@ const { createPetWindow, createChatWindow, getPetWindow, getChatWindow, getChatV
 const { registerIpcHandlers } = require('./src/ipc-handlers');
 const { setupAutoUpdater } = require('./src/updater');
 const { getTray, setTray, destroyTray } = require('./src/tray');
+const { autoReconnect, disconnect } = require('./src/wechat-bridge');
 
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -86,6 +87,11 @@ app.whenReady().then(() => {
   registerGlobalShortcuts();
   setupAutoUpdater();
 
+  // Auto-reconnect WeChat bridge if previously logged in
+  autoReconnect().catch(err => {
+    console.error('[Main] WeChat bridge auto-reconnect error:', err.message);
+  });
+
   app.setLoginItemSettings({
     openAtLogin: store.get('autoLaunch', true),
     path: app.getPath('exe')
@@ -111,4 +117,5 @@ app.on('before-quit', () => {
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
   destroyTray();
+  disconnect({ notify: false });
 });

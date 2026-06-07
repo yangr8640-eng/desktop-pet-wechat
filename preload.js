@@ -84,5 +84,33 @@ contextBridge.exposeInMainWorld('petAPI', {
 
   // Listen for events from main
   onFocusInput: (cb) => ipcRenderer.on('focus-input', () => cb()),
-  onMessagesUpdated: (cb) => ipcRenderer.on('messages-updated', () => cb())
+  onMessagesUpdated: (cb) => ipcRenderer.on('messages-updated', () => cb()),
+
+  // WeChat bridge
+  wechatLogin: () => ipcRenderer.invoke('wechat-login'),
+  wechatDisconnect: () => ipcRenderer.invoke('wechat-disconnect'),
+  wechatStatus: () => ipcRenderer.invoke('wechat-status'),
+  wechatQRCode: () => ipcRenderer.invoke('wechat-qrcode'),
+  wechatAutoReconnect: () => ipcRenderer.invoke('wechat-auto-reconnect'),
+
+  // Task queue
+  getTaskList: () => ipcRenderer.invoke('task-list'),
+  getTaskStatus: (taskId) => ipcRenderer.invoke('task-status', taskId),
+
+  // Agent log
+  getAgentLog: (limit) => ipcRenderer.invoke('agent-log', limit),
+
+  // Agent events from main process (task status changes)
+  onAgentEvent: (cb) => {
+    const handler = (_event, data) => cb(data);
+    ipcRenderer.on('agent-event', handler);
+    return () => ipcRenderer.removeListener('agent-event', handler);
+  },
+
+  // WeChat bridge events
+  onWechatEvent: (event, cb) => {
+    const handler = (_event, data) => cb(data);
+    ipcRenderer.on(event, handler);
+    return () => ipcRenderer.removeListener(event, handler);
+  }
 });

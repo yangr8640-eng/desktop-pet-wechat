@@ -250,3 +250,34 @@ const idleInterval = setInterval(() => {
 window.addEventListener('beforeunload', () => {
   clearInterval(idleInterval);
 });
+
+/* ─── Agent Event Feedback (WeChat Task Status) ─── */
+let agentBubbleTimeout = null;
+
+window.petAPI.onAgentEvent(({ event, data }) => {
+  switch (event) {
+    case 'task-queued':
+      showBubble(`📨 收到任务: ${data.senderName}`);
+      clearTimeout(agentBubbleTimeout);
+      agentBubbleTimeout = setTimeout(hideBubble, 3000);
+      break;
+    case 'task-started':
+      showBubble('🤔 处理中...');
+      break;
+    case 'task-thinking':
+      showBubble(`💭 思考中... (第${data.round}轮)`);
+      break;
+    case 'task-tool-call':
+      showBubble(`🔧 执行: ${data.tool}`);
+      break;
+    case 'task-tool-result':
+      showBubble('✅ 工具完成');
+      break;
+    case 'task-completed':
+      const statusEmoji = data.status === 'completed' ? '✅' : '❌';
+      showBubble(`${statusEmoji} 任务${data.status === 'completed' ? '完成' : '失败'}`);
+      clearTimeout(agentBubbleTimeout);
+      agentBubbleTimeout = setTimeout(hideBubble, 5000);
+      break;
+  }
+});

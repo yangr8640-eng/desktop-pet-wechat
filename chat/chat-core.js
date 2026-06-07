@@ -45,7 +45,15 @@ window.Chat = window.Chat || {};
     updateBannerDismiss: document.getElementById('updateBannerDismiss'),
     globalSearchOverlay: document.getElementById('globalSearchOverlay'),
     globalSearchInput: document.getElementById('globalSearchInput'),
-    globalSearchResults: document.getElementById('globalSearchResults')
+    globalSearchResults: document.getElementById('globalSearchResults'),
+    wechatLoginBtn: document.getElementById('wechatLoginBtn'),
+    wechatStatusDot: document.getElementById('wechatStatusDot'),
+    wechatStatusText: document.getElementById('wechatStatusText'),
+    wechatUserId: document.getElementById('wechatUserId'),
+    wechatQRContainer: document.getElementById('wechatQRContainer'),
+    wechatQRImage: document.getElementById('wechatQRImage'),
+    wechatQRHint: document.getElementById('wechatQRHint'),
+    wechatDisconnectBtn: document.getElementById('wechatDisconnectBtn')
   };
 
   // ─── Shared State ───

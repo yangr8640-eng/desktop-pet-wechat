@@ -265,4 +265,185 @@ async function callAIStreamWithRetry(messages, onChunk, onDone, onError, maxRetr
   onError(`重试${maxRetries}次后仍然失败: ${lastError}`);
 }
 
-module.exports = { callAI, callAIStream, callAIStreamWithRetry, cancelActiveStream, validateModelApiKey, generateConversationTitle, buildSystemPrompt };
+// ─── AI with Tools (Function Calling) ───
+
+// Parse streaming tool_call deltas from SSE chunks.
+// OpenAI-compatible APIs emit tool_calls as delta fragments;
+// we accumulate them per index and emit onEvent('tool_calls', ...)
+// when arguments for an index complete.
+function callAIWithTools(messages, tools, onEvent) {
+  return new Promise((resolve, reject) => {
+    const provider = getActiveModelProvider();
+    if (!provider.apiKey) {
+      const msg = `你还没设置${provider.name}的API Key哦！`;
+      if (onEvent) onEvent({ type: 'error', message: msg });
+      reject(new Error(msg));
+      return;
+    }
+
+    cancelActiveStream();
+    activeStreamController = new AbortController();
+    const controller = activeStreamController;
+    let aborted = false;
+    controller.signal.addEventListener('abort', () => { aborted = true; });
+
+    const toolDefs = tools.map(t => ({
+      type: 'function',
+      function: {
+        name: t.function.name,
+        description: t.function.description,
+        parameters: t.function.parameters
+      }
+    }));
+
+    (async () => {
+      let resp;
+      try {
+        resp = await fetch(provider.apiBaseUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${provider.apiKey}`
+          },
+          body: JSON.stringify({
+            model: provider.modelName,
+            messages,
+            tools: toolDefs,
+            temperature: 0.7,
+            max_tokens: 4096,
+            stream: true
+          }),
+          signal: controller.signal
+        });
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          if (activeStreamController === controller) activeStreamController = null;
+          resolve({ content: null, toolCalls: null, aborted: true });
+          return;
+        }
+        const msg = `网络错误: ${err.message}`;
+        if (onEvent) onEvent({ type: 'error', message: msg });
+        if (activeStreamController === controller) activeStreamController = null;
+        reject(new Error(msg));
+        return;
+      }
+
+      if (!resp.ok) {
+        try {
+          const errText = await resp.text();
+          const msg = `API错误(${resp.status}): ${errText}`;
+          if (onEvent) onEvent({ type: 'error', message: msg });
+          reject(new Error(msg));
+        } catch {
+          const msg = `API错误(${resp.status})`;
+          if (onEvent) onEvent({ type: 'error', message: msg });
+          reject(new Error(msg));
+        }
+        if (activeStreamController === controller) activeStreamController = null;
+        return;
+      }
+
+      try {
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let fullContent = '';
+        const toolCallAccum = {}; // { index: { id, name, arguments } }
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop();
+
+          for (const line of lines) {
+            if (aborted) {
+              if (activeStreamController === controller) activeStreamController = null;
+              resolve({ content: null, toolCalls: null, aborted: true });
+              return;
+            }
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('data: ')) continue;
+            const data = trimmed.slice(6);
+            if (data === '[DONE]') continue;
+
+            try {
+              const json = JSON.parse(data);
+              const delta = json.choices?.[0]?.delta;
+              if (!delta) continue;
+
+              // Regular text content
+              const content = delta.content;
+              if (content) {
+                fullContent += content;
+                if (onEvent) onEvent({ type: 'chunk', text: content, fullText: fullContent });
+              }
+
+              // Tool calls in delta
+              const toolCalls = delta.tool_calls;
+              if (toolCalls) {
+                for (const tc of toolCalls) {
+                  const idx = tc.index != null ? tc.index : 0;
+                  if (!toolCallAccum[idx]) {
+                    toolCallAccum[idx] = { id: '', name: '', arguments: '' };
+                  }
+                  if (tc.id) toolCallAccum[idx].id = tc.id;
+                  if (tc.function) {
+                    if (tc.function.name) toolCallAccum[idx].name += tc.function.name;
+                    if (tc.function.arguments) toolCallAccum[idx].arguments += tc.function.arguments;
+                  }
+                }
+              }
+            } catch { /* skip unparseable lines */ }
+          }
+        }
+
+        // Build final tool calls list
+        const toolCallsList = Object.values(toolCallAccum).filter(tc => tc.name);
+        const hasToolCalls = toolCallsList.length > 0;
+
+        if (hasToolCalls && onEvent) {
+          onEvent({ type: 'tool_calls', toolCalls: toolCallsList });
+        }
+        if (onEvent) onEvent({ type: 'done', fullText: fullContent, toolCalls: toolCallsList });
+
+        resolve({
+          content: fullContent || null,
+          toolCalls: hasToolCalls ? toolCallsList : null,
+          aborted: false
+        });
+      } catch (err) {
+        if (err.name === 'AbortError' || aborted) {
+          if (activeStreamController === controller) activeStreamController = null;
+          resolve({ content: null, toolCalls: null, aborted: true });
+          return;
+        }
+        const msg = `读取响应时出错: ${err.message}`;
+        if (onEvent) onEvent({ type: 'error', message: msg });
+        reject(new Error(msg));
+      }
+
+      if (activeStreamController === controller) activeStreamController = null;
+    })();
+  });
+}
+
+// Non-streaming helper: accumulate all chunks, return final result
+async function callAIWithToolsSync(messages, tools) {
+  let fullText = '';
+  let toolCalls = null;
+
+  const result = await callAIWithTools(messages, tools, (event) => {
+    if (event.type === 'chunk') {
+      fullText = event.fullText;
+    } else if (event.type === 'tool_calls') {
+      toolCalls = event.toolCalls;
+    }
+  });
+
+  return { content: result.content, toolCalls: result.toolCalls || toolCalls, aborted: result.aborted };
+}
+
+module.exports = { callAI, callAIStream, callAIStreamWithRetry, cancelActiveStream, validateModelApiKey, generateConversationTitle, buildSystemPrompt, callAIWithTools, callAIWithToolsSync };
