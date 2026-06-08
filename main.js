@@ -288,33 +288,47 @@ function hideChatWindow() {
 }
 
 /* ─── AI API ─── */
-async function callAI(messages) {
+async function callAI(messages, timeoutMs = 30000) {
   const provider = getActiveModelProvider();
   if (!provider.apiKey) {
     return `你还没设置${provider.name}的API Key哦！请在聊天窗口的设置里输入API Key~`;
   }
 
-  const resp = await fetch(provider.apiBaseUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${provider.apiKey}`
-    },
-    body: JSON.stringify({
-      model: provider.modelName,
-      messages,
-      temperature: 0.8,
-      max_tokens: 2000
-    })
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (!resp.ok) {
-    const errText = await resp.text();
-    throw new Error(`API错误(${resp.status}): ${errText}`);
+  try {
+    const resp = await fetch(provider.apiBaseUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${provider.apiKey}`
+      },
+      body: JSON.stringify({
+        model: provider.modelName,
+        messages,
+        temperature: 0.8,
+        max_tokens: 2000
+      }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`API错误(${resp.status}): ${errText}`);
+    }
+
+    const data = await resp.json();
+    return data.choices[0].message.content;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      throw new Error(`请求超时(${timeoutMs / 1000}秒)，请检查网络后重试`);
+    }
+    throw err;
   }
-
-  const data = await resp.json();
-  return data.choices[0].message.content;
 }
 
 /* ─── API Key Validation ─── */
