@@ -134,6 +134,7 @@ let chatWidth = 360;
 let chatHeight = 400; // default, recalculated in createChatWindow
 let savedChatBounds = null; // preserved across hide/show cycles
 let ignoreBlurUntil = 0; // timestamp to suppress blur after show
+let isQuitting = false;
 
 /* ─── Pet Window ─── */
 function createPetWindow() {
@@ -202,8 +203,10 @@ function createChatWindow() {
   chatWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
   chatWindow.on('close', (e) => {
-    e.preventDefault();
-    hideChatWindow();
+    if (!isQuitting) {
+      e.preventDefault();
+      hideChatWindow();
+    }
   });
   chatWindow.on('blur', () => {
     if (Date.now() < ignoreBlurUntil) return;
@@ -896,6 +899,7 @@ ipcMain.on('minimize-chat', () => {
 });
 
 ipcMain.on('quit-app', () => {
+  isQuitting = true;
   if (petWindow) {
     const pos = petWindow.getPosition();
     store.set('petPosition', { x: pos[0], y: pos[1] });
