@@ -4,7 +4,7 @@ const { store, generateId, getConversations, saveConversations, getActiveConvers
 const { callAI, callAIStream, callAIStreamWithRetry, cancelActiveStream, validateModelApiKey, generateConversationTitle, buildSystemPrompt } = require('./ai');
 const { performWebSearch, formatSearchContext, isWeatherQuery, fetchWeatherData } = require('./search');
 const { readFileContent } = require('./file-reader');
-const { getPetWindow, getChatWindow, getChatVisible, showChatWindow, hideChatWindow } = require('./windows');
+const { getPetWindow, getChatWindow, getChatVisible, showChatWindow, hideChatWindow, setQuitting } = require('./windows');
 const { getTheme } = require('../themes');
 const { destroyTray } = require('./tray');
 const { startLogin, disconnect, autoReconnect, getStatus: getBridgeStatus, getQRCode } = require('./wechat-bridge');
@@ -627,6 +627,7 @@ function registerIpcHandlers() {
   /* ─── Quit ─── */
 
   ipcMain.on('quit-app', () => {
+    setQuitting();
     const petWindow = getPetWindow();
     if (petWindow) {
       const pos = petWindow.getPosition();

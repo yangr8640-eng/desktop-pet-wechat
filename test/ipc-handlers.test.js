@@ -122,7 +122,8 @@ const mockWindows = {
   getChatWindow: jest.fn().mockReturnValue({ webContents: { send: jest.fn() }, isMinimized: jest.fn().mockReturnValue(false) }),
   getChatVisible: jest.fn().mockReturnValue(true),
   showChatWindow: jest.fn(),
-  hideChatWindow: jest.fn()
+  hideChatWindow: jest.fn(),
+  setQuitting: jest.fn()
 };
 jest.mock('../src/windows', () => mockWindows);
 

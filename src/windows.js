@@ -13,6 +13,7 @@ let chatHeight = 400;
 let savedChatBounds = null;
 let ignoreBlurUntil = 0;
 let animTimer = null;
+let isQuitting = false;
 
 function getPetWindow() { return petWindow; }
 function getChatWindow() { return chatWindow; }
@@ -98,8 +99,10 @@ function createChatWindow() {
   }
 
   chatWindow.on('close', (e) => {
-    e.preventDefault();
-    hideChatWindow();
+    if (!isQuitting) {
+      e.preventDefault();
+      hideChatWindow();
+    }
   });
   chatWindow.on('blur', () => {
     if (Date.now() < ignoreBlurUntil) return;
@@ -215,6 +218,8 @@ function hideChatWindow() {
   step();
 }
 
+function setQuitting() { isQuitting = true; }
+
 module.exports = {
   getPetWindow,
   getChatWindow,
@@ -222,5 +227,6 @@ module.exports = {
   createPetWindow,
   createChatWindow,
   showChatWindow,
-  hideChatWindow
+  hideChatWindow,
+  setQuitting
 };
